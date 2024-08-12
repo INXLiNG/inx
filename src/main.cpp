@@ -1,94 +1,109 @@
-/*
- * This example creates an SDL window and renderer, and then draws some lines,
- * rectangles and points to it every frame.
- *
- * This code is public domain. Feel free to use it for any purpose!
- */
+#include <SDL3/SDL.h>   // used for SDL
+#include <glad/glad.h>  // used for OpenGL
 
-#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
+#include <iostream>     // used for std::cout, std::cerr
+#include <filesystem>   // used for std::filesystem::path
 
-#include <glad/glad.h>
+#include "resources/shader.h"
 
-/* We will use this renderer to draw into this window every frame. */
-static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
-static SDL_FPoint points[500];
+#define PATH(file) std::filesystem::path(RES_PATH) / file
 
-/* This function runs once at startup. */
-int SDL_AppInit(void **appstate, int argc, char *argv[])
+#define SCREEN_WIDTH    800
+#define SCREEN_HEIGHT   600
+
+int main(int argc, char** argv)
 {
-    int i;
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 
-    if (SDL_Init(SDL_INIT_VIDEO) == -1) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Couldn't initialize SDL!", SDL_GetError(), NULL);
-        return SDL_APP_FAILURE;
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+        std::cerr << "Could not initialize SDL: " << SDL_GetError() << "\n";
+        return 0;
     }
 
-    if (SDL_CreateWindowAndRenderer("examples/renderer/primitives", 640, 480, 0, &window, &renderer) == -1) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Couldn't create window/renderer!", SDL_GetError(), NULL);
-        return SDL_APP_FAILURE;
+    SDL_Window* window = SDL_CreateWindow("SDL2 Window", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    if (!window)
+    {
+        std::cerr << "Could not create SDL window: " << SDL_GetError() << "\n";
+        SDL_Quit();
+        return 0;
     }
 
-    /* set up some random points */
-    for (i = 0; i < SDL_arraysize(points); i++) {
-        points[i].x = (SDL_randf() * 440.0f) + 100.0f;
-        points[i].y = (SDL_randf() * 280.0f) + 100.0f;
+    SDL_GL_CreateContext(window);
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    {
+        std::cerr << "Could not intialize OpenGL: " << SDL_GetError() << "\n";
+        SDL_Quit();
+        return 0;
     }
 
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
-}
+    inx::ResourceManager manager;
 
-/* This function runs when a new event (mouse input, keypresses, etc) occurs. */
-int SDL_AppEvent(void *appstate, const SDL_Event *event)
-{
-    if (event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+    inx::ShaderParams params;
+    params.vert_filepath = PATH("tri.vs");
+    params.frag_filepath = PATH("tri.fs");
+
+    manager.load_resource<inx::Shader>("main", params);
+
+    std::cout << "OpenGL Loaded\n";
+    std::cout << " - Vendor:    " << glGetString(GL_VENDOR)   << "\n";
+    std::cout << " - Renderer:  " << glGetString(GL_RENDERER) << "\n";
+    std::cout << " - Version:   " << glGetString(GL_VERSION)  << "\n";
+
+    glClearColor(0.5, 0.0, 0.5, 1.0);
+
+    float vertices[] = {
+        // positions         // colors
+         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
+         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
+    };
+
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    bool loop = true;
+    while (loop)
+    {
+        SDL_Event e;
+        while (SDL_PollEvent(&e))
+        {
+            switch(e.type)
+            {
+                case SDL_EVENT_QUIT:
+                    loop = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        manager.get<inx::Shader>("main")->use();
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        
+        SDL_GL_SwapWindow(window);
     }
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
-}
 
-/* This function runs once per frame, and is the heart of the program. */
-int SDL_AppIterate(void *appstate)
-{
-    SDL_FRect rect;
+    SDL_Quit();
 
-    /* as you can see from this, rendering draws over whatever was drawn before it. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);  /* black, full alpha */
-    SDL_RenderClear(renderer);  /* start with a blank canvas. */
-
-    /* draw a filled rectangle in the middle of the canvas. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);  /* blue, full alpha */
-    rect.x = rect.y = 100;
-    rect.w = 440;
-    rect.h = 280;
-    SDL_RenderFillRect(renderer, &rect);
-
-    /* draw some points across the canvas. */
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  /* red, full alpha */
-    SDL_RenderPoints(renderer, points, SDL_arraysize(points));
-
-    /* draw a unfilled rectangle in-set a little bit. */
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);  /* green, full alpha */
-    rect.x += 30;
-    rect.y += 30;
-    rect.w -= 60;
-    rect.h -= 60;
-    SDL_RenderRect(renderer, &rect);
-
-    /* draw two lines in an X across the whole canvas. */
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  /* yellow, full alpha */
-    SDL_RenderLine(renderer, 0, 0, 640, 480);
-    SDL_RenderLine(renderer, 0, 480, 640, 0);
-
-    SDL_RenderPresent(renderer);  /* put it all on the screen! */
-
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
-}
-
-/* This function runs once at shutdown. */
-void SDL_AppQuit(void *appstate)
-{
-    /* SDL will clean up the window/renderer for us. */
+    return 0;
 }
