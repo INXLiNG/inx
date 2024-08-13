@@ -14,7 +14,7 @@ namespace inx
         std::filesystem::path frag_filepath;
     };
 
-    struct Shader : public Resource
+    struct Shader : public IResource
     {
     public:
         Shader(const ShaderParams& params);
