@@ -1,8 +1,9 @@
 #ifndef __INX_APP_H__
 #define __INX_APP_H__
 
-#include <SDL3/SDL.h>   // used for SDL
-#include <glad/glad.h>  // used for OpenGL
+#include <SDL3/SDL.h>       // used for SDL
+#include <glad/glad.h>      // used for OpenGL
+#include <stb/stb_image.h>  // used for stbi_load
 
 #include <iostream>     // used for std::cout, std::cerr
 #include <filesystem>   // used for std::filesystem::path
@@ -48,6 +49,16 @@ namespace inx
         params.frag_filepath = PATH("tri.fs");
 
         manager.load_resource<Shader>("main", params);
+
+        // testing loading an img; this will be moved elsewhere
+        std::filesystem::path img_path = PATH("wall.jpg");
+        int width, height, channels;
+        unsigned char* data = stbi_load(img_path.string().c_str(), &width, &height, &channels, 0);
+        if (data)
+            std::cout << "img: (" << width << "x" << height << ")\n";
+        else
+            std::cerr << "could not load img\n";
+        stbi_image_free(data);
 
         std::cout << "OpenGL Loaded\n";
         std::cout << " - Vendor:    " << glGetString(GL_VENDOR)   << "\n";
