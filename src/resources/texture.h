@@ -7,26 +7,13 @@
 
 namespace inx
 {
-    struct TextureParams
-    {
-        std::filesystem::path texture_filepath;
-    };
-
     struct Texture : public IResource
     {
     public:
-        Texture(const TextureParams& params);
+        virtual ~Texture() = default;
+        static std::unique_ptr<Texture> load(const std::filesystem::path& texture_filepath);
 
-        /// @brief Set the current shader to be used by OpenGL
-        inline void use() const noexcept
-        {
-            glUseProgram(_id);
-        }
-
-    private:
-        int _width;
-        int _height;
-        unsigned char* _pixels;
+        virtual void bind(unsigned int slot = 0) const = 0;
     };
 } // namespace inx
 

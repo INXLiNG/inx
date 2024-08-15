@@ -81,6 +81,11 @@ namespace inx
         glDeleteShader(frag_id);
     }
 
+    OpenGLShader::~OpenGLShader()
+    {
+        glDeleteProgram(_id);
+    }
+
     void OpenGLShader::bind() const
     {
         glUseProgram(_id);

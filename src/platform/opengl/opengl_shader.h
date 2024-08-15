@@ -14,6 +14,7 @@ namespace inx
     {
     public:
         OpenGLShader(const path& vertex_filepath, const path& fragment_filepath);
+        ~OpenGLShader();
 
         void bind() const override;
 

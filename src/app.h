@@ -10,6 +10,7 @@
 
 #include "resources/resources.h"
 #include "resources/shader.h"
+#include "resources/texture.h"
 
 #define PATH(filepath) std::filesystem::path(RES_PATH) / filepath
 
@@ -45,18 +46,12 @@ namespace inx
 
         std::filesystem::path vert = PATH("tri.vs");
         std::filesystem::path frag = PATH("tri.fs");
+        
+        std::filesystem::path img_path = PATH("wall.jpg");
+
         ResourceManager manager;
         manager.load_resource<Shader>("tri", vert, frag);
-
-        // testing loading an img; this will be moved elsewhere
-        std::filesystem::path img_path = PATH("wall.jpg");
-        int width, height, channels;
-        unsigned char* data = stbi_load(img_path.string().c_str(), &width, &height, &channels, 0);
-        if (data)
-            std::cout << "img: (" << width << "x" << height << ")\n";
-        else
-            std::cerr << "could not load img\n";
-        stbi_image_free(data);
+        manager.load_resource<Texture>("wall", img_path);
 
         std::cout << "OpenGL Loaded\n";
         std::cout << " - Vendor:    " << glGetString(GL_VENDOR)   << "\n";
@@ -66,28 +61,42 @@ namespace inx
         glClearColor(0.5, 0.0, 0.5, 1.0);
 
         float vertices[] = {
-            // positions         // colors
-             0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
-             0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
+             // positions         // colors           // texture coords
+             0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+             0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
         };
 
-        unsigned int VBO, VAO;
+        unsigned int indices[] = {
+            0, 1, 3, // first triangle
+            1, 2, 3  // second triangle
+        };
+
+        unsigned int VBO, VAO, EBO;
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
-        
+        glGenBuffers(1, &EBO);
+
         glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
         // position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
         // color attribute
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
+        
+        // texture coord attribute
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(2);
 
         bool loop = true;
         while (loop)
@@ -107,9 +116,11 @@ namespace inx
 
             glClear(GL_COLOR_BUFFER_BIT);
 
+            manager.get_resource<Texture>("wall").bind(GL_TEXTURE0);
+
             manager.get_resource<Shader>("tri").bind();
             glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
             
             SDL_GL_SwapWindow(window);
         }
