@@ -12,6 +12,9 @@
 #include "resources/shader.h"
 #include "resources/texture.h"
 
+#include "renderer/buffer.h"
+#include "renderer/vertex_array.h"
+
 #define PATH(filepath) std::filesystem::path(RES_PATH) / filepath
 
 namespace inx
@@ -58,8 +61,6 @@ namespace inx
         std::cout << " - Renderer:  " << glGetString(GL_RENDERER) << "\n";
         std::cout << " - Version:   " << glGetString(GL_VERSION)  << "\n";
 
-        glClearColor(0.5, 0.0, 0.5, 1.0);
-
         float vertices[] = {
              // positions         // colors           // texture coords
              0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
@@ -67,36 +68,22 @@ namespace inx
             -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
             -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
         };
+        auto vertex_buffer = IVertexBuffer::create(vertices, sizeof(vertices));
+        vertex_buffer->set_layout({
+            { "position", BufferElementDataType::Float3 },
+            { "color", BufferElementDataType::Float3 },
+            { "tex_coord", BufferElementDataType::Float2 },
+        });
 
         unsigned int indices[] = {
             0, 1, 3, // first triangle
             1, 2, 3  // second triangle
         };
+        auto index_buffer = IIndexBuffer::create(indices, 6);
 
-        unsigned int VBO, VAO, EBO;
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        glGenBuffers(1, &EBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-        // position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        // color attribute
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-        
-        // texture coord attribute
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-        glEnableVertexAttribArray(2);
+        auto vertex_array = IVertexArray::create();
+        vertex_array->add_vertex_buffer(vertex_buffer);
+        vertex_array->set_index_buffer(index_buffer);
 
         bool loop = true;
         while (loop)
@@ -114,13 +101,14 @@ namespace inx
                 }
             }
 
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClearColor(0.5, 0.0, 0.5, 1.0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            manager.get_resource<Texture>("wall").bind(GL_TEXTURE0);
-
+            manager.get_resource<Texture>("wall").bind();
             manager.get_resource<Shader>("tri").bind();
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+            vertex_array->bind();
+            glDrawElements(GL_TRIANGLES, index_buffer->get_count(), GL_UNSIGNED_INT, nullptr);
             
             SDL_GL_SwapWindow(window);
         }
