@@ -8,6 +8,7 @@
 #include <iostream>     // used for std::cout, std::cerr
 #include <filesystem>   // used for std::filesystem::path
 
+#include "resources/resources.h"
 #include "resources/shader.h"
 
 #define PATH(filepath) std::filesystem::path(RES_PATH) / filepath
@@ -42,13 +43,10 @@ namespace inx
             return;
         }
 
+        std::filesystem::path vert = PATH("tri.vs");
+        std::filesystem::path frag = PATH("tri.fs");
         ResourceManager manager;
-
-        ShaderParams params;
-        params.vert_filepath = PATH("tri.vs");
-        params.frag_filepath = PATH("tri.fs");
-
-        manager.load_resource<Shader>("main", params);
+        manager.load_resource<Shader>("tri", vert, frag);
 
         // testing loading an img; this will be moved elsewhere
         std::filesystem::path img_path = PATH("wall.jpg");
@@ -109,7 +107,7 @@ namespace inx
 
             glClear(GL_COLOR_BUFFER_BIT);
 
-            manager.get<Shader>("main").use();
+            manager.get_resource<Shader>("tri").bind();
             glBindVertexArray(VAO);
             glDrawArrays(GL_TRIANGLES, 0, 3);
             

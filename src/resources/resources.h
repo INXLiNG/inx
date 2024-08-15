@@ -6,84 +6,70 @@
 #include <unordered_map>    // for std::unordered_map
 #include <optional>         // for std::optional
 
+#include <concepts>
+
 namespace inx
 {
-    /// @brief Checks whether `T` accepts `U` as a parameter in construction.
-    template<typename T, typename U>
-    concept takes_resource_params = requires(const U& params) { T(params); };
+    template<typename T, typename... Args>
+    concept is_loadable = requires(Args... args) 
+    {  
+        { T::load(args...) } -> std::same_as<std::unique_ptr<T>>;
+    };
 
-    /// @brief Base class for all resource types (i.e. loaded from disk at 
-    ///        runtime) to enable runtime polymorphism.
     struct IResource
     {
     public:
-        // One virtual method is required for type to be polymorphic.
         virtual ~IResource() = default;
     };
 
-    /// @brief Manages the loading and lifetime management of 'resource' types
-    ///        (i.e. that which is loaded at runtime). All resources are stored
-    ///        in a nested map structure of `map<type, map<string_id, resource>>`
-    ///        to allow better tracking of derived resource types.
     struct ResourceManager
     {
     public:
-        /// @brief Load a resource from disk.
-        /// @tparam T The resource type; must derived from `IResource`.
-        /// @tparam U Parameters to pass into construction of `T`; `T(U)` must be valid.
-        /// @param resource_identifier String identifier for a resource.
-        /// @param params Parameters to be passed for resource construction.
-        template<typename T, typename U>
-        requires std::is_base_of_v<IResource, T> && takes_resource_params<T, U>
-        void load_resource(const std::string resource_identifier, const U& params)
+        template<typename T, typename... Args>
+        requires std::is_base_of_v<IResource, T> && is_loadable<T, Args...>
+        void load_resource(const std::string& resource_id, Args... args)
         {
-            const auto type_idx = std::type_index(typeid(T));
-            _resources[type_idx][resource_identifier] = std::make_unique<T>(params);
+            const auto type_index = std::type_index(typeid(T));
+            _resources[type_index][resource_id] = T::load(args...);
         }
 
-        /// @brief Retrieve a reference to a loaded resource
-        /// @tparam T The resource type; must derived from `IResource`.
-        /// @param resource_identifier String identifier for a resource.
-        /// @return A reference to the resource, if it could be found.
         template<typename T>
         requires std::is_base_of_v<IResource, T>
-        [[nodiscard]] T& get(const std::string& resource_identifier)
+        [[nodiscard]] T& get_resource(const std::string& resource_id)
         {
-            if (!is_loaded<T>(resource_identifier))
+            if (!is_loaded<T>(resource_id))
             { // check if resource exists; throw error if not found
-                throw std::runtime_error(std::string("Could not find resource: ") + resource_identifier);
+                std::cerr << "Resource [" << resource_id << "] not found.\n";
+                throw std::runtime_error(std::string("Could not find resource: ") + resource_id);
             }
 
-            IResource* resource_ptr = _resources[std::type_index(typeid(T))][resource_identifier].get();
+            // because we check std::is_base_of<T, V>, we know this is a valid conversion
+            IResource* resource_ptr = _resources[std::type_index(typeid(T))][resource_id].get();
             T* resource = dynamic_cast<T*>(resource_ptr);
 
             return *resource;
         }
 
-        /// @brief Check if a resource is currently loaded.
-        /// @param resource_identifier String identifier for a resource.
-        /// @return true if the resource is loaded; false otherwise.
         template<typename T>
         requires std::is_base_of_v<IResource, T>
-        [[nodiscard]] bool is_loaded(const std::string& resource_identifier) const noexcept
+        [[nodiscard]] bool is_loaded(const std::string& resource_id) const noexcept
         {
-            bool result = false;
+            bool found = false;
             
             if (const auto& outer_it = _resources.find(std::type_index(typeid(T))); outer_it != _resources.end()) 
             { // search outer map to see if we store this resource type
-                const auto& map = outer_it->second;
+                const auto& resource_map = outer_it->second;
 
-                if (const auto& inner_it = map.find(resource_identifier); inner_it != map.end()) 
+                if (const auto& inner_it = resource_map.find(resource_id); inner_it != resource_map.end()) 
                 { // search inner map to see if we have this specific resource loaded
-                    result = true;
+                    found = true;
                 }
             }
 
-            return result;
+            return found;
         }
 
     private:
-        /// @brief Maps resource types to a map of particular resources keyed on their resource path
         std::unordered_map<std::type_index, std::unordered_map<std::string, std::unique_ptr<IResource>>> _resources;
     };
 } // namespace inx
