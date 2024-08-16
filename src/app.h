@@ -18,6 +18,7 @@
 
 #include "renderer/buffer.h"
 #include "renderer/vertex_array.h"
+#include "renderer/camera.h"
 
 #define PATH(filepath) std::filesystem::path(RES_PATH) / filepath
 
@@ -135,11 +136,8 @@ namespace inx
         auto vertex_array = IVertexArray::create();
         vertex_array->add_vertex_buffer(vertex_buffer);
 
-        glm::vec3 camera_position = glm::vec3(0.f, 0.f, 3.f);
-        glm::vec3 camera_front    = glm::vec3(0.f, 0.f, -1.f);
-        glm::vec3 camera_up       = glm::vec3(0.f, 1.f, 0.f);
+        PerspectiveCamera camera{glm::vec3(0.f, 0.f, 3.f)};
 
-        float yaw = -90.f, pitch = 0.f, fov = 45.f;
         float delta_time = 0.f;
         float last_frame = 0.f;
 
@@ -173,10 +171,10 @@ namespace inx
                         float speed = 10.f * delta_time;
                         switch(e.key.key)
                         {
-                            case SDLK_W: camera_position += camera_front * speed; break;
-                            case SDLK_S: camera_position -= camera_front * speed; break;
-                            case SDLK_A: camera_position -= glm::normalize(glm::cross(camera_front, camera_up)) * speed; break;
-                            case SDLK_D: camera_position += glm::normalize(glm::cross(camera_front, camera_up)) * speed; break;
+                            case SDLK_W: camera.change_position(PerspectiveCamera::DIRECTION::FORWARD, delta_time); break;
+                            case SDLK_S: camera.change_position(PerspectiveCamera::DIRECTION::BACKWARD, delta_time); break;
+                            case SDLK_A: camera.change_position(PerspectiveCamera::DIRECTION::LEFT, delta_time); break;
+                            case SDLK_D: camera.change_position(PerspectiveCamera::DIRECTION::RIGHT, delta_time); break;
 
                             case SDLK_ESCAPE: loop = false;
                         }
@@ -186,26 +184,13 @@ namespace inx
                     {
                         float xoffset = e.motion.xrel;
                         float yoffset = -e.motion.yrel;
-
-                        yaw += xoffset * .1f;
-                        pitch += yoffset * .1f;
-                        if (pitch > 89.f) pitch = 89.f;
-                        if (pitch < -89.f) pitch = -89.f;
-
-                        glm::vec3 front;
-                        front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-                        front.y = sin(glm::radians(pitch));
-                        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-                        camera_front = glm::normalize(front);
+                        camera.change_pov(xoffset, yoffset);
                     } break;
 
                     case SDL_EVENT_MOUSE_WHEEL:
                     {
                         float dy = e.wheel.y;
-                        fov -= dy * 10;
-
-                        if (fov < 5.f) fov = 5.f;
-                        if (fov > 90.f) fov = 90.f;
+                        camera.change_fov(dy);
                     } break;
                 }
             }
@@ -217,10 +202,10 @@ namespace inx
             auto& shader = manager.get_resource<Shader>("tri");
             shader.bind();
 
-            glm::mat4 projection = glm::perspective(glm::radians(fov), (float)screen_width / (float)screen_height, .1f, 100.f);
+            glm::mat4 projection = glm::perspective(glm::radians(camera.get_fov()), (float)screen_width / (float)screen_height, .1f, 100.f);
             shader.set_mat4("projection", projection);
 
-            glm::mat4 view = glm::lookAt(camera_position, camera_position + camera_front, camera_up);
+            glm::mat4 view = camera.get_view_matrix();
             shader.set_mat4("view", view);
 
             vertex_array->bind();
@@ -232,7 +217,7 @@ namespace inx
                 model = glm::translate(model, cube_positions[i]);
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.f, .3f, .5f));
                 
-                manager.get_resource<Shader>("tri").set_mat4("model", model);
+                shader.set_mat4("model", model);
 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
             }

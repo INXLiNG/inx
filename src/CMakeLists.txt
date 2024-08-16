@@ -9,6 +9,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
     renderer/buffer.cpp
     renderer/vertex_array.cpp
+    renderer/camera.cpp
 
     resources/shader.cpp
     resources/texture.cpp
