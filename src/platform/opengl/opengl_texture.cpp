@@ -7,6 +7,7 @@ namespace inx
     OpenGLTexture::OpenGLTexture(const std::filesystem::path& texture_filepath)
     {
         int width, height, channels;
+        stbi_set_flip_vertically_on_load(true);
         unsigned char* data = stbi_load(texture_filepath.string().c_str(), &width, &height, &channels, 0);
 
         _width = width;
@@ -51,6 +52,8 @@ namespace inx
         
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }

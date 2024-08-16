@@ -1,5 +1,7 @@
 #include "opengl_shader.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 /// @brief Helper function to load a shader based on a filepath 
 GLuint _load_shader(const std::filesystem::path& path, GLenum type)
 {
@@ -89,5 +91,10 @@ namespace inx
     void OpenGLShader::bind() const
     {
         glUseProgram(_id);
+    }
+
+    void OpenGLShader::set_mat4(const std::string& name, const glm::mat4& mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
     }
 } // namespace inx

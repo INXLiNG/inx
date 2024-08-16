@@ -16,7 +16,9 @@ namespace inx
         OpenGLShader(const path& vertex_filepath, const path& fragment_filepath);
         ~OpenGLShader();
 
-        void bind() const override;
+        virtual void bind() const override;
+
+        virtual void set_mat4(const std::string& name, const glm::mat4& mat) const override;
 
     private:
         GLuint _id;
