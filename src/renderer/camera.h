@@ -28,6 +28,7 @@ namespace inx
 
         float get_fov() const { return _fov; }
         const glm::vec3& get_position() const { return _position; }
+        const glm::vec3& get_view_direction() const { return _front; }
 
     private:
         glm::vec3 _position;

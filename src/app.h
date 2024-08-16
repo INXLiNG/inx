@@ -58,17 +58,21 @@ namespace inx
         glEnable(GL_DEPTH_TEST);
 
         ResourceManager manager;
+        {
+            std::filesystem::path material_shader_vs = PATH("material.vs");
+            std::filesystem::path material_shader_fs = PATH("material.fs");
+            manager.load_resource<Shader>("material", material_shader_vs, material_shader_fs);
 
-        std::filesystem::path vert = PATH("material.vs");
-        std::filesystem::path frag = PATH("material.fs");
-        manager.load_resource<Shader>("material", vert, frag);
+            std::filesystem::path cube_shader_vs = PATH("light_cube.vs");
+            std::filesystem::path cube_shader_fs = PATH("light_cube.fs");
+            manager.load_resource<Shader>("light_cube", cube_shader_vs, cube_shader_fs);
+            
+            std::filesystem::path container_path = PATH("container.png");
+            manager.load_resource<Texture>("container", container_path);
 
-        vert = PATH("light_cube.vs");
-        frag = PATH("light_cube.fs");
-        manager.load_resource<Shader>("light_cube", vert, frag);
-        
-        std::filesystem::path img_path = PATH("container.jpg");
-        manager.load_resource<Texture>("container", img_path);
+            std::filesystem::path container_spec_path = PATH("container_spec.png");
+            manager.load_resource<Texture>("container_spec", container_spec_path);
+        }
 
         std::cout << "OpenGL Loaded\n";
         std::cout << " - Vendor:    " << glGetString(GL_VENDOR)   << "\n";
@@ -76,47 +80,48 @@ namespace inx
         std::cout << " - Version:   " << glGetString(GL_VERSION)  << "\n";
 
         float vertices[] = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+            // positions          // normals           // texture coords
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f,  1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  0.0f,  1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f,  1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f,  1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
 
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
         };
         
         std::vector<glm::vec3> cube_positions;
@@ -124,12 +129,19 @@ namespace inx
             for (int y = -25; y < 25; y += 5)
                 for (int z = -25; z < 25; z += 5)
                     cube_positions.push_back(glm::vec3((float)x, (float)y, (float)z));
+        
+        glm::vec3 light_positions[] = {
+            glm::vec3( 0.7f,  0.2f,  2.0f),
+            glm::vec3( 2.3f, -3.3f, -4.0f),
+            glm::vec3(-4.0f,  2.0f, -12.0f),
+            glm::vec3( 0.0f,  0.0f, -3.0f)
+        };
 
         auto cube_vbo = IVertexBuffer::create(vertices, sizeof(vertices));
         cube_vbo->set_layout({
             { "position",  BufferElementDataType::Float3 },
-            { "tex_coord", BufferElementDataType::Float2 },
             { "normal",    BufferElementDataType::Float3 },
+            { "tex_coord", BufferElementDataType::Float2 },
         });
 
         auto cube_vao = IVertexArray::create();
@@ -139,12 +151,18 @@ namespace inx
         light_cube_vao->add_vertex_buffer(cube_vbo);
 
         PerspectiveCamera camera{glm::vec3(0.f, 0.f, 3.f)};
-        glm::vec3 light_position = glm::vec3(1.2f, 1.f, 2.f);
 
         float delta_time = 0.f;
         float last_frame = 0.f;
 
         bool rotate_cubes = false;
+
+        {
+            auto& shader = manager.get_resource<Shader>("material");
+            shader.bind();
+            shader.set_int("material.diffuse", 0);
+            shader.set_int("material.specular", 1);
+        }
 
         bool loop = true;
         while (loop)
@@ -182,13 +200,6 @@ namespace inx
                             case SDLK_Q: camera.change_position(PerspectiveCamera::DIRECTION::UP, delta_time); break;
                             case SDLK_E: camera.change_position(PerspectiveCamera::DIRECTION::DOWN, delta_time); break;
 
-                            case SDLK_I: light_position.z -= 50.f * delta_time; break;
-                            case SDLK_K: light_position.z += 50.f * delta_time; break;
-                            case SDLK_J: light_position.x -= 50.f * delta_time; break;
-                            case SDLK_L: light_position.x += 50.f * delta_time; break;
-                            case SDLK_U: light_position.y += 50.f * delta_time; break;
-                            case SDLK_O: light_position.y -= 50.f * delta_time; break;
-
                             case SDLK_R: rotate_cubes = !rotate_cubes; break;
 
                             case SDLK_TAB:
@@ -225,63 +236,104 @@ namespace inx
             glClearColor(0.1, 0.1, 0.1, 1.0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // manager.get_resource<Texture>("container").bind();
-
             auto& lighting_shader = manager.get_resource<Shader>("material");
             lighting_shader.bind();
-            lighting_shader.set_vec3("light.position", light_position);
             lighting_shader.set_vec3("viewPos", camera.get_position());
-
-            glm::vec3 light_colour;
-            light_colour.x = (float)(sin(SDL_GetTicks() / 1000.f * 2.f));
-            light_colour.y = (float)(sin(SDL_GetTicks() / 1000.f * .7f));
-            light_colour.z = (float)(sin(SDL_GetTicks() / 1000.f * 1.3f));
-
-            glm::vec3 diffuse = light_colour * glm::vec3(.5f);
-            lighting_shader.set_vec3("light.diffuse", diffuse);
-
-            glm::vec3 ambient = diffuse * glm::vec3(.2f);
-            lighting_shader.set_vec3("light.ambient", ambient);
-
-            glm::vec3 specular = glm::vec3(1.f, 1.f, 1.f);
-            lighting_shader.set_vec3("light.spec", specular);
-
-            lighting_shader.set_vec3("material.ambient", glm::vec3(1.f, .5f, .31f));
-            lighting_shader.set_vec3("material.diffuse", glm::vec3(1.f, .5f, .31f));
-            lighting_shader.set_vec3("material.spec", glm::vec3(.5f, .5f, .5f));
             lighting_shader.set_float("material.shininess", 32.f);
+
+            // directional light
+            lighting_shader.set_vec3("dirLight.direction", glm::vec3(-.2f, -1.f, -.3f));
+            lighting_shader.set_vec3("dirLight.ambient", glm::vec3(.05f, .05f, .05f));
+            lighting_shader.set_vec3("dirLight.diffuse", glm::vec3(.4f, .4f, .4f));
+            lighting_shader.set_vec3("dirLight.specular", glm::vec3(.5f, .5f, .5f));
+
+            // 1st point light
+            lighting_shader.set_vec3("pointLights[0].position", light_positions[0]);
+            lighting_shader.set_vec3("pointLights[0].ambient", glm::vec3(.05f, .05f, .05f));
+            lighting_shader.set_vec3("pointLights[0].diffuse", glm::vec3(.8f, .8f, .8f));
+            lighting_shader.set_vec3("pointLights[0].specular", glm::vec3(1.f, 1.f, 1.f));
+            lighting_shader.set_float("pointLights[0].constant", 1.f);
+            lighting_shader.set_float("pointLights[0].linear", .09f);
+            lighting_shader.set_float("pointLights[0].quadratic", .032f);
+
+            // 2nd point light
+            lighting_shader.set_vec3("pointLights[1].position", light_positions[1]);
+            lighting_shader.set_vec3("pointLights[1].ambient", glm::vec3(.05f, .05f, .05f));
+            lighting_shader.set_vec3("pointLights[1].diffuse", glm::vec3(.8f, .8f, .8f));
+            lighting_shader.set_vec3("pointLights[1].specular", glm::vec3(1.f, 1.f, 1.f));
+            lighting_shader.set_float("pointLights[1].constant", 1.f);
+            lighting_shader.set_float("pointLights[1].linear", .09f);
+            lighting_shader.set_float("pointLights[1].quadratic", .032f);
+
+            // 3rd point light
+            lighting_shader.set_vec3("pointLights[2].position", light_positions[2]);
+            lighting_shader.set_vec3("pointLights[2].ambient", glm::vec3(.05f, .05f, .05f));
+            lighting_shader.set_vec3("pointLights[2].diffuse", glm::vec3(.8f, .8f, .8f));
+            lighting_shader.set_vec3("pointLights[2].specular", glm::vec3(1.f, 1.f, 1.f));
+            lighting_shader.set_float("pointLights[2].constant", 1.f);
+            lighting_shader.set_float("pointLights[2].linear", .09f);
+            lighting_shader.set_float("pointLights[2].quadratic", .032f);
+
+            // 4th point light
+            lighting_shader.set_vec3("pointLights[3].position", light_positions[3]);
+            lighting_shader.set_vec3("pointLights[3].ambient", glm::vec3(.05f, .05f, .05f));
+            lighting_shader.set_vec3("pointLights[3].diffuse", glm::vec3(.8f, .8f, .8f));
+            lighting_shader.set_vec3("pointLights[3].specular", glm::vec3(1.f, 1.f, 1.f));
+            lighting_shader.set_float("pointLights[3].constant", 1.f);
+            lighting_shader.set_float("pointLights[3].linear", .09f);
+            lighting_shader.set_float("pointLights[3].quadratic", .032f);
+
+            // 4th point light
+            lighting_shader.set_vec3("spotLight.position", camera.get_position());
+            lighting_shader.set_vec3("spotLight.direction", camera.get_view_direction());
+            lighting_shader.set_vec3("spotLight.ambient", glm::vec3(0.f, 0.f, 0.f));
+            lighting_shader.set_vec3("spotLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
+            lighting_shader.set_vec3("spotLight.specular", glm::vec3(1.f, 1.f, 1.f));
+            lighting_shader.set_float("spotLight.constant", 1.f);
+            lighting_shader.set_float("spotLight.linear", .09f);
+            lighting_shader.set_float("spotLight.quadratic", .032f);
+            lighting_shader.set_float("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+            lighting_shader.set_float("spotLight.outerCutOff", glm::cos(glm::radians(15.f)));
 
             auto proj = glm::perspective(glm::radians(camera.get_fov()), (float)(screen_width / screen_height), .1f, 100.f);
             auto view = camera.get_view_matrix();
             lighting_shader.set_mat4("projection", proj);
             lighting_shader.set_mat4("view", view);
 
-            cube_vao->bind();
-            for (size_t i = 0; i < cube_positions.size(); i++)
-            {
-                float angle = rotate_cubes ? (20.f * i) + ((float)SDL_GetTicks() / 10.f) : 0;
+            glm::mat4 model = glm::mat4(1.f);
+            lighting_shader.set_mat4("model", model);
 
-                glm::mat4 model = glm::mat4(1.f);
-                model = glm::translate(model, cube_positions.at(i));
+            manager.get_resource<Texture>("container").bind(GL_TEXTURE0);
+            manager.get_resource<Texture>("container_spec").bind(GL_TEXTURE1);
+
+            cube_vao->bind();
+            for (unsigned int i = 0; i < cube_positions.size(); i++)
+            {
+                float angle = rotate_cubes ? (20.f * i) * (SDL_GetTicks() / 1000.f / 50.f) : 0;
+
+                model = glm::mat4(1.f);
+                model = glm::translate(model, cube_positions[i]);
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.f, .3f, .5f));
-                
                 lighting_shader.set_mat4("model", model);
 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
             }
 
-            auto& light_cube_shader = manager.get_resource<Shader>("light_cube");
-            light_cube_shader.bind();
-            light_cube_shader.set_mat4("projection", proj);
-            light_cube_shader.set_mat4("view", view);
-
-            glm::mat4 model = glm::mat4(1.f);
-            model = glm::translate(model, light_position);
-            model = glm::scale(model, glm::vec3(.4f));
-            light_cube_shader.set_mat4("model", model);
+            auto& cube_shader = manager.get_resource<Shader>("light_cube");
+            cube_shader.bind();
+            cube_shader.set_mat4("projection", proj);
+            cube_shader.set_mat4("view", view);
 
             light_cube_vao->bind();
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            for (unsigned int i = 0; i < 4; i++)
+            {
+                model = glm::mat4(1.f);
+                model = glm::translate(model, light_positions[i]);
+                model = glm::scale(model, glm::vec3(.2f));
+                cube_shader.set_mat4("model", model);
+
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
             
             SDL_GL_SwapWindow(window);
         }

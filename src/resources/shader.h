@@ -18,6 +18,7 @@ namespace inx
 
         virtual void bind() const = 0;
 
+        virtual void set_int(const std::string& name, int i) const = 0;
         virtual void set_float(const std::string& name, float f) const = 0;
         virtual void set_vec3(const std::string& name, const glm::vec3& vec) const = 0;
         virtual void set_mat4(const std::string& name, const glm::mat4& mat) const = 0;

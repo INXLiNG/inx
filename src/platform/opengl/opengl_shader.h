@@ -15,6 +15,7 @@ namespace inx
 
         virtual void bind() const override;
 
+        virtual void set_int(const std::string& name, int i) const override;
         virtual void set_float(const std::string& name, float f) const override;
         virtual void set_vec3(const std::string& name, const glm::vec3& vec) const override;
         virtual void set_mat4(const std::string& name, const glm::mat4& mat) const override;

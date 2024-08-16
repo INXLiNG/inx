@@ -98,6 +98,11 @@ namespace inx
         glUseProgram(_id);
     }
 
+    void OpenGLShader::set_int(const std::string& name, int i) const
+    {
+        glUniform1iv(glGetUniformLocation(_id, name.c_str()), 1, &i);
+    }
+
     void OpenGLShader::set_float(const std::string& name, float f) const
     {
         glUniform1fv(glGetUniformLocation(_id, name.c_str()), 1, &f);
