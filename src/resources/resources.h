@@ -1,11 +1,11 @@
 #ifndef __INX_RESOURCES_H__
 #define __INX_RESOURCES_H__
 
-#include <memory>           // for std::unique_ptr
-#include <typeindex>        // for std::type_index
-#include <unordered_map>    // for std::unordered_map
-#include <optional>         // for std::optional
-#include <concepts>         // for std::same_as
+#include <memory>                   // for std::unique_ptr
+#include <typeindex>                // for std::type_index
+#include <unordered_map>            // for std::unordered_map
+#include <optional>                 // for std::optional
+#include <concepts>                 // for std::same_as
 
 namespace inx
 {

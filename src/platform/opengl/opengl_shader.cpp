@@ -1,5 +1,8 @@
 #include "opengl_shader.h"
 
+#include <fstream>                  // for std::ifstream
+#include <sstream>                  // for std::stringstream
+
 #include <glm/gtc/type_ptr.hpp>
 
 /// @brief Helper function to load a shader based on a filepath 

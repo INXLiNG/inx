@@ -1,10 +1,11 @@
 #ifndef __INX_SHADER_H__
 #define __INX_SHADER_H__
 
-#include <filesystem>   // used for std::filesystem::path
+#include <filesystem>               // for std::filesystem::path
+
+#include <glm/glm.hpp>
 
 #include "resources.h"
-#include "../math/math.h"
 
 namespace inx
 {

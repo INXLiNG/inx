@@ -1,10 +1,10 @@
 #ifndef __INX_BUFFER_H__
 #define __INX_BUFFER_H__
 
-#include <vector>
-#include <memory>
-#include <cstdint>
-#include <string>
+#include <vector>                   // for std::vector, std::initializer_list
+#include <memory>                   // for std::shared_ptr
+#include <cstdint>                  // for uint32_t
+#include <string>                   // for std::string
 
 namespace inx
 {

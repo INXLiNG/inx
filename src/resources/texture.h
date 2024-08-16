@@ -1,7 +1,7 @@
 #ifndef __INX_TEXTURE_H__
 #define __INX_TEXTURE_H__
 
-#include <filesystem>   // used for std::filesystem::path
+#include <filesystem>               // for std::filesystem::path
 
 #include "resources.h"
 

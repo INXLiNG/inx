@@ -3,9 +3,6 @@
 
 #include <glad/glad.h>
 
-#include <fstream>
-#include <sstream>
-
 #include "../../resources/texture.h"
 
 namespace inx

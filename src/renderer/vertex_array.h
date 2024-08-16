@@ -1,7 +1,7 @@
 #ifndef __INX_VERTEX_ARRAY_H__
 #define __INX_VERTEX_ARRAY_H__
 
-#include <memory>
+#include <memory>                   // for std::shared_ptr
 
 #include "buffer.h"
 

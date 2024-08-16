@@ -1,6 +1,9 @@
 #ifndef __INX_APP_H__
 #define __INX_APP_H__
 
+#include <iostream>                 // used for std::cout, std::cerr
+#include <filesystem>               // used for std::filesystem::path
+
 #include <SDL3/SDL.h>
 #include <glad/glad.h>
 #include <stb/stb_image.h>
@@ -8,9 +11,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
-
-#include <iostream>     // used for std::cout, std::cerr
-#include <filesystem>   // used for std::filesystem::path
 
 #include "resources/resources.h"
 #include "resources/shader.h"
@@ -24,7 +24,7 @@
 
 namespace inx
 {
-    void run_app(const char* title = "SDL3 Window", int screen_width = 800, int screen_height = 600)
+    void run_app(const char* title = "SDL3 Window - ESC to close", int screen_width = 800, int screen_height = 600)
     {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);

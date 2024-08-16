@@ -2,7 +2,7 @@
 #define __INX_OPENGL_VERTEX_ARRAY_H__
 
 #include <cstdint>
-#include <vector>
+#include <vector>                   // for std::vector
 
 #include "../../renderer/vertex_array.h"
 
