@@ -14,6 +14,8 @@ namespace inx
             BACKWARD,
             LEFT,
             RIGHT,
+            UP,
+            DOWN,
         };
 
         PerspectiveCamera(const glm::vec3& position);
@@ -25,6 +27,7 @@ namespace inx
         void change_fov(float dy);
 
         float get_fov() const { return _fov; }
+        const glm::vec3& get_position() const { return _position; }
 
     private:
         glm::vec3 _position;

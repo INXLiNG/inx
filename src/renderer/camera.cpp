@@ -17,13 +17,15 @@ namespace inx
 
     void PerspectiveCamera::change_position(PerspectiveCamera::DIRECTION direction, float dt)
     {
-        const float speed = 10.f * dt;
+        const float speed = 30.f * dt;
         switch (direction)
         {
             case DIRECTION::FORWARD:  _position += _front * speed; break;
             case DIRECTION::BACKWARD: _position -= _front * speed; break;
             case DIRECTION::LEFT:     _position -= _right * speed; break;
             case DIRECTION::RIGHT:    _position += _right * speed; break;
+            case DIRECTION::UP:       _position += _up * speed; break;
+            case DIRECTION::DOWN:     _position -= _up * speed; break;
         }
     }
 

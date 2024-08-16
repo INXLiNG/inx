@@ -2,6 +2,7 @@
 
 #include <fstream>                  // for std::ifstream
 #include <sstream>                  // for std::stringstream
+#include <iostream>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -41,6 +42,7 @@ GLuint _load_shader(const std::filesystem::path& path, GLenum type)
         std::vector<GLchar> log(max_length);
         glGetShaderInfoLog(shader, 1024, NULL, log.data());
 
+        std::cerr << "Could not compile shader: " << log.data() << "\n";
         throw std::runtime_error(log.data());
     }
 
@@ -94,6 +96,16 @@ namespace inx
     void OpenGLShader::bind() const
     {
         glUseProgram(_id);
+    }
+
+    void OpenGLShader::set_float(const std::string& name, float f) const
+    {
+        glUniform1fv(glGetUniformLocation(_id, name.c_str()), 1, &f);
+    }
+
+    void OpenGLShader::set_vec3(const std::string& name, const glm::vec3& vec) const
+    {
+        glUniform3fv(glGetUniformLocation(_id, name.c_str()), 1, &vec[0]);
     }
 
     void OpenGLShader::set_mat4(const std::string& name, const glm::mat4& mat) const
