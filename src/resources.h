@@ -1,31 +1,35 @@
 #ifndef __INX_RESOURCES_H__
 #define __INX_RESOURCES_H__
 
-#include <memory>                   // for std::unique_ptr
-#include <typeindex>                // for std::type_index
-#include <unordered_map>            // for std::unordered_map
-#include <optional>                 // for std::optional
-#include <concepts>                 // for std::same_as
+#include <concepts>
+#include <filesystem>
+#include <string>
+#include <typeindex>
+#include <unordered_map>
+
+#include <glm/glm.hpp>
+
+#include "types.h"
 
 namespace inx
 {
     template<typename T, typename... Args>
     concept is_loadable = requires(Args... args) 
     {  
-        { T::load(args...) } -> std::same_as<std::unique_ptr<T>>;
+        { T::load(args...) } -> std::same_as<Scope<T>>;
     };
 
-    struct IResource
+    struct Resource
     {
     public:
-        virtual ~IResource() = default;
+        virtual ~Resource() = default;
     };
 
     struct ResourceManager
     {
     public:
         template<typename T, typename... Args>
-        requires std::is_base_of_v<IResource, T> && is_loadable<T, Args...>
+        requires std::is_base_of_v<Resource, T> && is_loadable<T, Args...>
         void load_resource(const std::string& resource_id, Args... args)
         {
             const auto type_index = std::type_index(typeid(T));
@@ -33,7 +37,7 @@ namespace inx
         }
 
         template<typename T>
-        requires std::is_base_of_v<IResource, T>
+        requires std::is_base_of_v<Resource, T>
         [[nodiscard]] T& get_resource(const std::string& resource_id)
         {
             if (!is_loaded<T>(resource_id))
@@ -43,14 +47,14 @@ namespace inx
             }
 
             // because we check std::is_base_of<T, V>, we know this is a valid conversion
-            IResource* resource_ptr = _resources[std::type_index(typeid(T))][resource_id].get();
+            Resource* resource_ptr = _resources[std::type_index(typeid(T))][resource_id].get();
             T* resource = dynamic_cast<T*>(resource_ptr);
 
             return *resource;
         }
 
         template<typename T>
-        requires std::is_base_of_v<IResource, T>
+        requires std::is_base_of_v<Resource, T>
         [[nodiscard]] bool is_loaded(const std::string& resource_id) const noexcept
         {
             bool found = false;
@@ -69,7 +73,31 @@ namespace inx
         }
 
     private:
-        std::unordered_map<std::type_index, std::unordered_map<std::string, std::unique_ptr<IResource>>> _resources;
+        std::unordered_map<std::type_index, std::unordered_map<std::string, Scope<Resource>>> _resources;
+    };
+
+    struct Shader : public Resource
+    {
+    public:
+        virtual ~Shader() = default;
+
+        virtual void bind() const = 0;
+
+        virtual void set_int(const std::string& name, int i) const = 0;
+        virtual void set_float(const std::string& name, float f) const = 0;
+        virtual void set_vec3(const std::string& name, const glm::vec3& vec) const = 0;
+        virtual void set_mat4(const std::string& name, const glm::mat4& mat) const = 0;
+
+        static Scope<Shader> load(const std::filesystem::path& vertex_filepath, const std::filesystem::path& fragment_filepath);
+    };
+    
+    struct Texture : public Resource
+    {
+    public:
+        virtual ~Texture() = default;
+        static Scope<Texture> load(const std::filesystem::path& texture_filepath);
+
+        virtual void bind(unsigned int slot = 0) const = 0;
     };
 } // namespace inx
 

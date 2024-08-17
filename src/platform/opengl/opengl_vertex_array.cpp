@@ -1,4 +1,4 @@
-#include "opengl_vertex_array.h"
+#include "../opengl.h"
 
 #include <glad/glad.h>
 
@@ -25,12 +25,12 @@ namespace inx
         glBindVertexArray(0);
     }
 
-    void OpenGLVertexArray::add_vertex_buffer(const std::shared_ptr<IVertexBuffer>& buffer)
+    void OpenGLVertexArray::add_vertex_buffer(const Ref<VertexBuffer>& buffer)
     {
         glBindVertexArray(_id);
         buffer->bind();
 
-        const auto& layout = buffer->get_layout();
+        const auto& layout = buffer->layout();
         for (const auto& element : layout)
         {
             switch(element.data_type)
@@ -41,10 +41,10 @@ namespace inx
                     glEnableVertexAttribArray(_buffer_index);
                     glVertexAttribPointer(
                         _buffer_index,
-                        element.get_component_count(),
+                        element.component_count(),
                         GL_FLOAT,
                         GL_FALSE,
-                        layout.get_stride(),
+                        layout.stride(),
                         (const void*)element.offset
                     );
                     _buffer_index += 1;
@@ -55,7 +55,7 @@ namespace inx
         _vertex_buffers.push_back(buffer);
     }
 
-    void OpenGLVertexArray::set_index_buffer(const std::shared_ptr<IIndexBuffer>& buffer)
+    void OpenGLVertexArray::set_index_buffer(const Ref<IndexBuffer>& buffer)
     {
         glBindVertexArray(_id);
         buffer->bind();

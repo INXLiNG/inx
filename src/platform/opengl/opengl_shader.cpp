@@ -1,13 +1,13 @@
-#include "opengl_shader.h"
+#include "../opengl.h"
 
-#include <fstream>                  // for std::ifstream
-#include <sstream>                  // for std::stringstream
+#include <fstream>
+#include <sstream>
 #include <iostream>
 
+#include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-/// @brief Helper function to load a shader based on a filepath 
-GLuint _load_shader(const std::filesystem::path& path, GLenum type)
+u32 _load_shader(const std::filesystem::path& path, GLenum type)
 {
     std::string code;
     { // obtaining the actual code we care about
@@ -27,7 +27,7 @@ GLuint _load_shader(const std::filesystem::path& path, GLenum type)
     const char* code_str = code.c_str();
 
     // create the actual shader program
-    GLuint shader = glCreateShader(type);
+    u32 shader = glCreateShader(type);
     glShaderSource(shader, 1, &code_str, NULL);
     glCompileShader(shader);
 
@@ -36,7 +36,7 @@ GLuint _load_shader(const std::filesystem::path& path, GLenum type)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success)
     { // error found; find info and throw exception
-        GLint max_length;
+        i32 max_length;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &max_length);
         
         std::vector<GLchar> log(max_length);
@@ -52,7 +52,7 @@ GLuint _load_shader(const std::filesystem::path& path, GLenum type)
 
 namespace inx
 {
-    OpenGLShader::OpenGLShader(const path& vertex_filepath, const path& fragment_filepath)
+    OpenGLShader::OpenGLShader(const std::filesystem::path& vertex_filepath, const std::filesystem::path& fragment_filepath)
     {
         // load/compile our base shaders
         auto vert_id = _load_shader(vertex_filepath, GL_VERTEX_SHADER);
@@ -100,21 +100,25 @@ namespace inx
 
     void OpenGLShader::set_int(const std::string& name, int i) const
     {
-        glUniform1iv(glGetUniformLocation(_id, name.c_str()), 1, &i);
+        auto location = glGetUniformLocation(_id, name.c_str());
+        glUniform1iv(location, 1, &i);
     }
 
     void OpenGLShader::set_float(const std::string& name, float f) const
     {
-        glUniform1fv(glGetUniformLocation(_id, name.c_str()), 1, &f);
+        auto location = glGetUniformLocation(_id, name.c_str());
+        glUniform1fv(location, 1, &f);
     }
 
     void OpenGLShader::set_vec3(const std::string& name, const glm::vec3& vec) const
     {
-        glUniform3fv(glGetUniformLocation(_id, name.c_str()), 1, &vec[0]);
+        auto location = glGetUniformLocation(_id, name.c_str());
+        glUniform3fv(location, 1, &vec[0]);
     }
 
     void OpenGLShader::set_mat4(const std::string& name, const glm::mat4& mat) const
     {
-        glUniformMatrix4fv(glGetUniformLocation(_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+        auto location = glGetUniformLocation(_id, name.c_str());
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
     }
 } // namespace inx

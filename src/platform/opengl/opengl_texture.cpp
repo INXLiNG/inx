@@ -1,5 +1,6 @@
-#include "opengl_texture.h"
+#include "../opengl.h"
 
+#include <glad/glad.h>
 #include <stb/stb_image.h>
 #include <iostream>
 

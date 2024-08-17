@@ -6,16 +6,12 @@ using namespace inx;
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
-#include "resources/resources.h"
-#include "resources/shader.h"
-#include "resources/texture.h"
-
-#include "renderer/camera.h"
-#include "renderer/vertex_array.h"
+#include "renderer.h"
+#include "resources.h"
 
 #define PATH(filepath) std::filesystem::path(RES_PATH) / filepath
 
-typedef std::shared_ptr<IVertexArray> VAO;
+typedef std::shared_ptr<VertexArray> VAO;
 
 static std::vector<glm::vec3> cube_positions;
 
@@ -100,17 +96,17 @@ void init_cubes(ResourceManager &manager)
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
     };
 
-    auto cube_vbo = IVertexBuffer::create(vertices, sizeof(vertices));
-    cube_vbo->set_layout({
+    auto cube_vbo = VertexBuffer::create(vertices, sizeof(vertices));
+    cube_vbo->layout({
         { "position",  BufferElementDataType::Float3 },
         { "normal",    BufferElementDataType::Float3 },
         { "tex_coord", BufferElementDataType::Float2 },
     });
 
-    s_CubesData.cube_vao = IVertexArray::create();
+    s_CubesData.cube_vao = VertexArray::create();
     s_CubesData.cube_vao->add_vertex_buffer(cube_vbo);
 
-    s_CubesData.light_cube_vao = IVertexArray::create();
+    s_CubesData.light_cube_vao = VertexArray::create();
     s_CubesData.light_cube_vao->add_vertex_buffer(cube_vbo);
     
     auto& shader = manager.get_resource<Shader>("material");
@@ -123,7 +119,7 @@ void draw_cubes(ResourceManager& manager, PerspectiveCamera& camera, int w, int 
 {
     auto& lighting_shader = manager.get_resource<Shader>("material");
     lighting_shader.bind();
-    lighting_shader.set_vec3("viewPos", camera.get_position());
+    lighting_shader.set_vec3("viewPos", camera.position());
     lighting_shader.set_float("material.shininess", 32.f);
 
     // directional light
@@ -169,8 +165,8 @@ void draw_cubes(ResourceManager& manager, PerspectiveCamera& camera, int w, int 
     lighting_shader.set_float("pointLights[3].quadratic", .032f);
 
     // 4th point light
-    lighting_shader.set_vec3("spotLight.position", camera.get_position());
-    lighting_shader.set_vec3("spotLight.direction", camera.get_view_direction());
+    lighting_shader.set_vec3("spotLight.position", camera.position());
+    lighting_shader.set_vec3("spotLight.direction", camera.front());
     lighting_shader.set_vec3("spotLight.ambient", glm::vec3(0.f, 0.f, 0.f));
     lighting_shader.set_vec3("spotLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
     lighting_shader.set_vec3("spotLight.specular", glm::vec3(1.f, 1.f, 1.f));
@@ -180,8 +176,8 @@ void draw_cubes(ResourceManager& manager, PerspectiveCamera& camera, int w, int 
     lighting_shader.set_float("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
     lighting_shader.set_float("spotLight.outerCutOff", glm::cos(glm::radians(15.f)));
 
-    auto proj = glm::perspective(glm::radians(camera.get_fov()), (float)(w / h), .1f, 100.f);
-    auto view = camera.get_view_matrix();
+    auto proj = glm::perspective(glm::radians(camera.fov()), (float)(w / h), .1f, 100.f);
+    auto view = camera.view_matrix();
     lighting_shader.set_mat4("projection", proj);
     lighting_shader.set_mat4("view", view);
 

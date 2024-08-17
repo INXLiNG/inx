@@ -1,4 +1,4 @@
-#include "opengl_render.h"
+#include "../opengl.h"
 
 #include <glad/glad.h>
 
@@ -9,12 +9,12 @@ namespace inx
         glEnable(GL_DEPTH_TEST);
     }
 
-    void OpenGLRenderAPI::set_viewport(int width, int height) const 
+    void OpenGLRenderAPI::viewport(i32 width, i32 height) const 
     {
         glViewport(0, 0, width, height);
     }
 
-    void OpenGLRenderAPI::clear_colour(glm::vec3 colour) const
+    void OpenGLRenderAPI::clear_colour(const glm::vec3& colour) const
     {
         glClearColor(colour.x, colour.y, colour.z, 1.f);
     }

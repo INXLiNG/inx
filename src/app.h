@@ -1,23 +1,18 @@
 #ifndef __INX_APP_H__
 #define __INX_APP_H__
 
-#include <iostream>                 // used for std::cout, std::cerr
-#include <filesystem>               // used for std::filesystem::path
+#include <filesystem>
+#include <iostream>
 
-#include <SDL3/SDL.h>
 #include <glad/glad.h>
-
+#include <SDL3/SDL.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
 
-#include "resources/resources.h"
-#include "resources/shader.h"
-#include "resources/texture.h"
-
-#include "renderer/camera.h"
-#include "renderer/render.h"
+#include "renderer.h"
+#include "resources.h"
 
 #include "cubes.h"
 
@@ -115,19 +110,19 @@ namespace inx
                     {
                         screen_width = e.window.data1;
                         screen_height = e.window.data2;
-                        render_api::set_viewport(screen_width, screen_height);
+                        render_api::viewport(screen_width, screen_height);
                     } break;
 
                     case SDL_EVENT_KEY_DOWN:
                     {
                         switch(e.key.key)
                         {
-                            case SDLK_W: camera.change_position(PerspectiveCamera::DIRECTION::FORWARD, delta_time); break;
-                            case SDLK_S: camera.change_position(PerspectiveCamera::DIRECTION::BACKWARD, delta_time); break;
-                            case SDLK_A: camera.change_position(PerspectiveCamera::DIRECTION::LEFT, delta_time); break;
-                            case SDLK_D: camera.change_position(PerspectiveCamera::DIRECTION::RIGHT, delta_time); break;
-                            case SDLK_Q: camera.change_position(PerspectiveCamera::DIRECTION::UP, delta_time); break;
-                            case SDLK_E: camera.change_position(PerspectiveCamera::DIRECTION::DOWN, delta_time); break;
+                            case SDLK_W: camera.position(PerspectiveCamera::Direction::Forward, delta_time); break;
+                            case SDLK_S: camera.position(PerspectiveCamera::Direction::Backward, delta_time); break;
+                            case SDLK_A: camera.position(PerspectiveCamera::Direction::Left, delta_time); break;
+                            case SDLK_D: camera.position(PerspectiveCamera::Direction::Right, delta_time); break;
+                            case SDLK_Q: camera.position(PerspectiveCamera::Direction::Up, delta_time); break;
+                            case SDLK_E: camera.position(PerspectiveCamera::Direction::Down, delta_time); break;
 
                             case SDLK_TAB:
                             {
@@ -145,7 +140,7 @@ namespace inx
                         {
                             float xoffset = e.motion.xrel;
                             float yoffset = -e.motion.yrel;
-                            camera.change_pov(xoffset, yoffset);
+                            camera.pov(xoffset, yoffset);
                         }
                     } break;
 
@@ -154,7 +149,7 @@ namespace inx
                         if (capture_mouse)
                         {
                             float dy = e.wheel.y;
-                            camera.change_fov(dy);
+                            camera.fov(dy);
                         }
                     } break;
                 }

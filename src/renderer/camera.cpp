@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "../renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -10,26 +10,26 @@ namespace inx
         update_vectors();
     }
 
-    glm::mat4 PerspectiveCamera::get_view_matrix()
+    glm::mat4 PerspectiveCamera::view_matrix()
     {
         return glm::lookAt(_position, _position + _front, _up);
     }
 
-    void PerspectiveCamera::change_position(PerspectiveCamera::DIRECTION direction, float dt)
+    void PerspectiveCamera::position(Direction direction, float dt)
     {
         const float speed = 30.f * dt;
         switch (direction)
         {
-            case DIRECTION::FORWARD:  _position += _front * speed; break;
-            case DIRECTION::BACKWARD: _position -= _front * speed; break;
-            case DIRECTION::LEFT:     _position -= _right * speed; break;
-            case DIRECTION::RIGHT:    _position += _right * speed; break;
-            case DIRECTION::UP:       _position += _up * speed; break;
-            case DIRECTION::DOWN:     _position -= _up * speed; break;
+            case Direction::Forward:  _position += _front * speed; break;
+            case Direction::Backward: _position -= _front * speed; break;
+            case Direction::Left:     _position -= _right * speed; break;
+            case Direction::Right:    _position += _right * speed; break;
+            case Direction::Up:       _position += _up * speed; break;
+            case Direction::Down:     _position -= _up * speed; break;
         }
     }
 
-    void PerspectiveCamera::change_pov(float dx, float dy)
+    void PerspectiveCamera::pov(float dx, float dy)
     {
         dx *= .1f;
         dy *= .1f;
@@ -40,7 +40,7 @@ namespace inx
         update_vectors();
     }
 
-    void PerspectiveCamera::change_fov(float dy)
+    void PerspectiveCamera::fov(float dy)
     {
         _fov -= dy * 10.f;
     }
