@@ -8,8 +8,10 @@ namespace inx
     {
         switch(type)
         {
+            case BufferElementDataType::Float:      return 4;
             case BufferElementDataType::Float2:     return 4 * 2;
             case BufferElementDataType::Float3:     return 4 * 3;
+            case BufferElementDataType::Float4:     return 4 * 4;
         }
 
         return 0;
@@ -25,8 +27,10 @@ namespace inx
     {
         switch(data_type)
         {
+            case BufferElementDataType::Float:      return 1;
             case BufferElementDataType::Float2:     return 2;
             case BufferElementDataType::Float3:     return 3;
+            case BufferElementDataType::Float4:     return 4;
         }
 
         return 0;
@@ -54,6 +58,13 @@ namespace inx
     {
         // NOTE(selina): In the future this will change what it returns based on current rendering API - 16/08
         auto result = std::make_shared<OpenGLVertexBuffer>(vertices, size);
+        return result;
+    }
+
+    Ref<VertexBuffer> VertexBuffer::create(u32 size)
+    {
+        // NOTE(selina): In the future this will change what it returns based on current rendering API - 18/08
+        auto result = std::make_shared<OpenGLVertexBuffer>(size);
         return result;
     }
 

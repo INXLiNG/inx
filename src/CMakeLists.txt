@@ -11,6 +11,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     renderer/buffers.cpp
     renderer/camera.cpp
     renderer/render_api.cpp
+    renderer/render2d.cpp
 
     resources/shader.cpp
     resources/texture.cpp

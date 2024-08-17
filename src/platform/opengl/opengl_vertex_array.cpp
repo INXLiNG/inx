@@ -35,8 +35,10 @@ namespace inx
         {
             switch(element.data_type)
             {
+                case BufferElementDataType::Float:
                 case BufferElementDataType::Float2:
                 case BufferElementDataType::Float3:
+                case BufferElementDataType::Float4:
                 {
                     glEnableVertexAttribArray(_buffer_index);
                     glVertexAttribPointer(

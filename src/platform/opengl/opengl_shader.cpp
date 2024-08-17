@@ -104,6 +104,12 @@ namespace inx
         glUniform1iv(location, 1, &i);
     }
 
+    void OpenGLShader::set_ints(const std::string& name, int* ints, u32 count) const
+    {
+        auto location = glGetUniformLocation(_id, name.c_str());
+        glUniform1iv(location, count, ints);
+    }
+
     void OpenGLShader::set_float(const std::string& name, float f) const
     {
         auto location = glGetUniformLocation(_id, name.c_str());

@@ -6,6 +6,7 @@
 #include <string>
 #include <typeindex>
 #include <unordered_map>
+#include <iostream>
 
 #include <glm/glm.hpp>
 
@@ -84,11 +85,25 @@ namespace inx
         virtual void bind() const = 0;
 
         virtual void set_int(const std::string& name, int i) const = 0;
+        virtual void set_ints(const std::string& name, int* ints, u32 count) const = 0;
         virtual void set_float(const std::string& name, float f) const = 0;
         virtual void set_vec3(const std::string& name, const glm::vec3& vec) const = 0;
         virtual void set_mat4(const std::string& name, const glm::mat4& mat) const = 0;
 
         static Scope<Shader> load(const std::filesystem::path& vertex_filepath, const std::filesystem::path& fragment_filepath);
+    };
+
+    enum class ImageFormat
+    {
+        None = 0, R8, RGB8, RGBA8,
+    };
+
+    struct TextureSpec
+    {
+        u32 width = 1;
+        u32 height = 1;
+        ImageFormat format = ImageFormat::RGB8;
+        bool generate_mipmaps = true;
     };
     
     struct Texture : public Resource
@@ -96,8 +111,13 @@ namespace inx
     public:
         virtual ~Texture() = default;
         static Scope<Texture> load(const std::filesystem::path& texture_filepath);
+        static Scope<Texture> load(const TextureSpec& spec);
 
         virtual void bind(unsigned int slot = 0) const = 0;
+
+        virtual const TextureSpec& spec() const = 0;
+
+        virtual void data(const void* data, u32 size) = 0; 
     };
 } // namespace inx
 

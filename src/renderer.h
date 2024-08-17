@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "types.h"
+#include "resources.h"
 
 namespace inx
 {
@@ -19,9 +20,21 @@ namespace inx
         void clear();
     } // namespace render_api
 
+    namespace render2d
+    {
+        void init(ResourceManager& manager);
+        void shutdown();
+
+        void begin_batch();
+        void end_batch();
+        void flush();
+
+        void draw_quad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& colour);
+    } // namespace render2d
+
     enum BufferElementDataType
     {
-        None = 0, Float2, Float3,
+        None = 0, Float, Float2, Float3, Float4
     };
 
     static constexpr u32 BufferElementDataTypeSize(BufferElementDataType type);
@@ -66,7 +79,10 @@ namespace inx
         virtual const BufferLayout& layout() const = 0;
         virtual void layout(const BufferLayout& layout) = 0;
 
+        virtual void data(const void* data, u32 size) = 0;
+
         static Ref<VertexBuffer> create(float* vertices, u32 size);
+        static Ref<VertexBuffer> create(u32 size);
     };
 
     struct IndexBuffer
@@ -127,6 +143,34 @@ namespace inx
     private:
         void update_vectors();
     };
+
+    class OrthographicCamera
+	{
+	public:
+		OrthographicCamera(float left, float right, float bottom, float top);
+
+		void projection(float left, float right, float bottom, float top);
+
+		const glm::vec3& position() const { return _position; }
+		void position(const glm::vec3& position) { _position = position; recalc_matrix(); }
+
+		float rotation() const { return _rotation; }
+		void rotation(float rotation) { _rotation = rotation; recalc_matrix(); }
+
+		const glm::mat4& projection_matrix() const { return _projection_matrix; }
+		const glm::mat4& view_matrix() const { return _view_matrix; }
+		const glm::mat4& view_projection_matrix() const { return _view_projection_matrix; }
+
+	private:
+		glm::mat4 _projection_matrix;
+		glm::mat4 _view_matrix;
+		glm::mat4 _view_projection_matrix;
+
+		glm::vec3 _position = { 0.0f, 0.0f, 0.0f };
+		float _rotation = 0.0f;
+	private:
+		void recalc_matrix();
+	};
 } // namespace inx
 
 #endif // __INX_RENDERER_H__

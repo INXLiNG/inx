@@ -10,6 +10,10 @@
 #include <imgui_internal.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/rotate_vector.hpp>
 
 #include "renderer.h"
 #include "resources.h"
@@ -47,7 +51,7 @@ namespace inx
 
         auto gl_context = SDL_GL_CreateContext(window);
         SDL_GL_MakeCurrent(window, gl_context);
-        SDL_GL_SetSwapInterval(0);
+        SDL_GL_SetSwapInterval(1);
 
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
         {
@@ -76,8 +80,12 @@ namespace inx
         std::cout << " - Renderer:  " << glGetString(GL_RENDERER) << "\n";
         std::cout << " - Version:   " << glGetString(GL_VERSION)  << "\n";
 
+        float ar = (float)screen_width / (float)screen_height;
+        float zoom = 1.f;
+
         ResourceManager manager;
         PerspectiveCamera camera{glm::vec3(0.f, 0.f, 3.f)};
+        OrthographicCamera orth_camera{-ar * zoom, ar * zoom, -zoom, zoom};
 
         init_cubes(manager);
 
@@ -85,9 +93,28 @@ namespace inx
         bool rotate_cubes = false;
         glm::vec3 clear_colour = glm::vec3(.1f, .1f, .1f);
 
+        render2d::init(manager);
+
         // loop state
         float delta_time = 0.f, last_frame = 0.f;
         bool loop = true;
+
+        {
+            auto quad_vs = PATH("quad.vs");
+            auto quad_fs = PATH("quad.fs");
+            manager.load_resource<Shader>("quad", quad_vs, quad_fs);
+
+            auto& shader = manager.get_resource<Shader>("quad");
+            shader.bind();
+            int samplers[32];
+            for (int i = 0; i < 32; i++)
+                samplers[i] = i;
+            shader.set_ints("u_textures", samplers, 32);
+        }
+
+        auto model = glm::mat4(1.f);
+        model = glm::translate(model, glm::vec3(0.f, 0.f, 0.f));
+        float timer = 0.f;
 
         while (loop)
         {
@@ -111,6 +138,9 @@ namespace inx
                         screen_width = e.window.data1;
                         screen_height = e.window.data2;
                         render_api::viewport(screen_width, screen_height);
+
+                        ar = (float)screen_width / (float)screen_height;
+                        orth_camera.projection(-ar * zoom, ar * zoom, -zoom, zoom);
                     } break;
 
                     case SDL_EVENT_KEY_DOWN:
@@ -150,6 +180,9 @@ namespace inx
                         {
                             float dy = e.wheel.y;
                             camera.fov(dy);
+
+                            zoom -= dy;
+                            orth_camera.projection(-ar * zoom, ar * zoom, -zoom, zoom);
                         }
                     } break;
                 }
@@ -166,13 +199,40 @@ namespace inx
                 ImGui::ColorEdit3("Clear Colour", (float*)&clear_colour.x);
 
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+                ImGui::Text("Time to render: %.3f", timer);
                 ImGui::End();
             }
 
             render_api::clear_colour(clear_colour);
             render_api::clear();
+
+            auto& shader = manager.get_resource<Shader>("quad");
+            shader.bind();
             
-            draw_cubes(manager, camera, screen_width, screen_height, rotate_cubes);
+            shader.set_mat4("u_vp_matrix", orth_camera.view_projection_matrix());
+            shader.set_mat4("u_model", model);
+            
+            manager.get_resource<Texture>("r2d_white").bind();
+
+            render2d::begin_batch();
+            
+            float a = (float)SDL_GetTicks();
+            glm::vec4 colour = glm::vec4(4.f, 0.f, .6f, 1.f);
+            for (float y = -10.f; y < 10.f; y += .5f)
+            {
+                for (float x = -10.f; x < 10.f; x += .5f)
+                {
+                    render2d::draw_quad(glm::vec3(x, y, 0.f), glm::vec2(.2f, .2f), colour);
+                }
+            }
+            float b = (float)SDL_GetTicks();
+
+            render2d::end_batch();
+            render2d::flush();
+
+            timer = b - a;
+            
+            // draw_cubes(manager, camera, screen_width, screen_height, rotate_cubes);
             
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -181,6 +241,8 @@ namespace inx
         }
 
         // cleanup
+
+        render2d::shutdown();
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplSDL3_Shutdown();

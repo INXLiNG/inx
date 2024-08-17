@@ -22,6 +22,8 @@ namespace inx
     {
     public:
         OpenGLVertexBuffer(float* vertices, u32 size);
+        OpenGLVertexBuffer(u32 size);
+
         virtual ~OpenGLVertexBuffer();
 
         virtual void bind() const override;
@@ -29,6 +31,8 @@ namespace inx
 
         virtual const BufferLayout& layout() const override { return _layout; }
         virtual void layout(const BufferLayout& layout) override { _layout = layout; }
+        
+        virtual void data(const void* data, u32 size) override;
 
     private:
         u32 _id;
@@ -80,6 +84,7 @@ namespace inx
         virtual void bind() const override;
 
         virtual void set_int(const std::string& name, int i) const override;
+        virtual void set_ints(const std::string& name, int* ints, u32 count) const override;
         virtual void set_float(const std::string& name, float f) const override;
         virtual void set_vec3(const std::string& name, const glm::vec3& vec) const override;
         virtual void set_mat4(const std::string& name, const glm::mat4& mat) const override;
@@ -92,14 +97,22 @@ namespace inx
     {
     public:
         OpenGLTexture(const std::filesystem::path& texture_filepath);
+        OpenGLTexture(const TextureSpec& spec);
 
         void bind(unsigned int slot = 0) const override;
 
+        virtual const TextureSpec& spec() const override { return _spec; }
+
+        virtual void data(const void* data, u32 size) override;
+
     private:
         u32 _id;
-
         int _width;
         int _height;
+
+        TextureSpec _spec;
+
+        u32 _format;
     };
 } // namespace inx
 
