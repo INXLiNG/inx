@@ -6,10 +6,12 @@ target_sources(${PROJECT_NAME} PRIVATE
     platform/opengl/opengl_texture.cpp
     platform/opengl/opengl_buffer.cpp
     platform/opengl/opengl_vertex_array.cpp
+    platform/opengl/opengl_render.cpp
 
     renderer/buffer.cpp
     renderer/vertex_array.cpp
     renderer/camera.cpp
+    renderer/render.cpp
 
     resources/shader.cpp
     resources/texture.cpp

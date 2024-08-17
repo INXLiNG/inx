@@ -7,13 +7,17 @@
 #include <SDL3/SDL.h>
 #include <glad/glad.h>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_opengl3.h>
+
 #include "resources/resources.h"
 #include "resources/shader.h"
 #include "resources/texture.h"
 
-#include "renderer/buffer.h"
-#include "renderer/vertex_array.h"
 #include "renderer/camera.h"
+#include "renderer/render.h"
 
 #include "cubes.h"
 
@@ -21,6 +25,8 @@ namespace inx
 {
     void run_app(const char* title = "SDL3 Window - ESC to close", int screen_width = 800, int screen_height = 600)
     {
+        // initialize sdl3
+
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
@@ -42,7 +48,12 @@ namespace inx
         bool capture_mouse = true;
         SDL_SetWindowRelativeMouseMode(window, capture_mouse);
 
-        SDL_GL_CreateContext(window);
+        // initialize opengl
+
+        auto gl_context = SDL_GL_CreateContext(window);
+        SDL_GL_MakeCurrent(window, gl_context);
+        SDL_GL_SetSwapInterval(0);
+
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
         {
             std::cerr << "Could not intialize OpenGL: " << SDL_GetError() << "\n";
@@ -50,7 +61,20 @@ namespace inx
             return;
         }
 
-        glEnable(GL_DEPTH_TEST);
+        render_api::init();
+
+        // initialize imgui
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+        ImGui::StyleColorsDark();
+
+        ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
+        ImGui_ImplOpenGL3_Init("#version 410");
 
         std::cout << "OpenGL Loaded\n";
         std::cout << " - Vendor:    " << glGetString(GL_VENDOR)   << "\n";
@@ -60,15 +84,18 @@ namespace inx
         ResourceManager manager;
         PerspectiveCamera camera{glm::vec3(0.f, 0.f, 3.f)};
 
-        float delta_time = 0.f, last_frame = 0.f;
+        init_cubes(manager);
 
+        // state for imgui
         bool rotate_cubes = false;
-        // init_cubes(manager);
+        glm::vec3 clear_colour = glm::vec3(.1f, .1f, .1f);
 
+        // loop state
+        float delta_time = 0.f, last_frame = 0.f;
         bool loop = true;
+
         while (loop)
         {
-
             float current_frame = (float)SDL_GetTicks() / 1000.f;
             delta_time = current_frame - last_frame;
             last_frame = current_frame;
@@ -76,6 +103,7 @@ namespace inx
             SDL_Event e;
             while (SDL_PollEvent(&e))
             {
+                ImGui_ImplSDL3_ProcessEvent(&e);
                 switch(e.type)
                 {
                     case SDL_EVENT_QUIT:
@@ -87,7 +115,7 @@ namespace inx
                     {
                         screen_width = e.window.data1;
                         screen_height = e.window.data2;
-                        glViewport(0, 0, screen_width, screen_height);
+                        render_api::set_viewport(screen_width, screen_height);
                     } break;
 
                     case SDL_EVENT_KEY_DOWN:
@@ -100,8 +128,6 @@ namespace inx
                             case SDLK_D: camera.change_position(PerspectiveCamera::DIRECTION::RIGHT, delta_time); break;
                             case SDLK_Q: camera.change_position(PerspectiveCamera::DIRECTION::UP, delta_time); break;
                             case SDLK_E: camera.change_position(PerspectiveCamera::DIRECTION::DOWN, delta_time); break;
-
-                            case SDLK_R: rotate_cubes = !rotate_cubes; break;
 
                             case SDLK_TAB:
                             {
@@ -134,14 +160,39 @@ namespace inx
                 }
             }
 
-            glClearColor(0.1, 0.1, 0.1, 1.0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplSDL3_NewFrame();
+            ImGui::NewFrame();
 
-            // draw_cubes(manager, camera, screen_width, screen_height, rotate_cubes);
+            {
+                ImGui::Begin("Menu");
+
+                ImGui::Checkbox("Rotate Cubes", &rotate_cubes);
+                ImGui::ColorEdit3("Clear Colour", (float*)&clear_colour.x);
+
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+                ImGui::End();
+            }
+
+            render_api::clear_colour(clear_colour);
+            render_api::clear();
+            
+            draw_cubes(manager, camera, screen_width, screen_height, rotate_cubes);
+            
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             
             SDL_GL_SwapWindow(window);
         }
 
+        // cleanup
+
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        ImGui::DestroyContext();
+
+        SDL_GL_DestroyContext(gl_context);
+        SDL_DestroyWindow(window);
         SDL_Quit();
     }
 } // namespace inx
