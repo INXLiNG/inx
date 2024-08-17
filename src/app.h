@@ -124,7 +124,7 @@ namespace inx
                             case SDLK_Q: camera.position(PerspectiveCamera::Direction::Up, delta_time); break;
                             case SDLK_E: camera.position(PerspectiveCamera::Direction::Down, delta_time); break;
 
-                            case SDLK_TAB:
+                            case SDLK_C:
                             {
                                 capture_mouse = !capture_mouse;
                                 SDL_SetWindowRelativeMouseMode(window, capture_mouse);
