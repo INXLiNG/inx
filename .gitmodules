@@ -1,0 +1,9 @@
+[submodule "inx/dep/SDL"]
+	path = inx/dep/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "inx/dep/imgui"]
+	path = inx/dep/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "inx/dep/glm"]
+	path = inx/dep/glm
+	url = https://github.com/g-truc/glm
