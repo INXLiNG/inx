@@ -1,9 +1,0 @@
-[submodule "dep/SDL"]
-	path = dep/SDL
-	url = https://github.com/libsdl-org/SDL
-[submodule "dep/glm"]
-	path = dep/glm
-	url = https://github.com/g-truc/glm
-[submodule "dep/imgui"]
-	path = dep/imgui
-	url = https://github.com/ocornut/imgui
