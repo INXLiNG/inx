@@ -1,6 +1,8 @@
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE 
     main.cpp 
+
+    core/input.cpp
     
     platform/opengl/opengl_shader.cpp
     platform/opengl/opengl_texture.cpp

@@ -15,6 +15,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
+#include "core.h"
 #include "renderer.h"
 #include "resources.h"
 
@@ -61,6 +62,7 @@ namespace inx
         }
 
         render_api::init();
+        Keyboard::init();
 
         // initialize imgui
 
@@ -112,8 +114,6 @@ namespace inx
             shader.set_ints("u_textures", samplers, 32);
         }
 
-        auto model = glm::mat4(1.f);
-        model = glm::translate(model, glm::vec3(0.f, 0.f, 0.f));
         float timer = 0.f;
 
         while (loop)
@@ -143,27 +143,6 @@ namespace inx
                         orth_camera.projection(-ar * zoom, ar * zoom, -zoom, zoom);
                     } break;
 
-                    case SDL_EVENT_KEY_DOWN:
-                    {
-                        switch(e.key.key)
-                        {
-                            case SDLK_W: camera.position(PerspectiveCamera::Direction::Forward, delta_time); break;
-                            case SDLK_S: camera.position(PerspectiveCamera::Direction::Backward, delta_time); break;
-                            case SDLK_A: camera.position(PerspectiveCamera::Direction::Left, delta_time); break;
-                            case SDLK_D: camera.position(PerspectiveCamera::Direction::Right, delta_time); break;
-                            case SDLK_Q: camera.position(PerspectiveCamera::Direction::Up, delta_time); break;
-                            case SDLK_E: camera.position(PerspectiveCamera::Direction::Down, delta_time); break;
-
-                            case SDLK_C:
-                            {
-                                capture_mouse = !capture_mouse;
-                                SDL_SetWindowRelativeMouseMode(window, capture_mouse);
-                            } break;
-
-                            case SDLK_ESCAPE: loop = false; break;
-                        }
-                    } break;
-
                     case SDL_EVENT_MOUSE_MOTION:
                     {
                         if (capture_mouse)
@@ -188,6 +167,24 @@ namespace inx
                 }
             }
 
+            Keyboard::update();
+            
+            if (Keyboard::key_down(Key::KEY_ESCAPE)) loop = false;
+
+            if (Keyboard::key(Key::KEY_W)) camera.position(PerspectiveCamera::Direction::Forward, delta_time);
+            if (Keyboard::key(Key::KEY_S)) camera.position(PerspectiveCamera::Direction::Backward, delta_time);
+            if (Keyboard::key(Key::KEY_A)) camera.position(PerspectiveCamera::Direction::Left, delta_time);
+            if (Keyboard::key(Key::KEY_D)) camera.position(PerspectiveCamera::Direction::Right, delta_time);
+            if (Keyboard::key(Key::KEY_Q)) camera.position(PerspectiveCamera::Direction::Up, delta_time);
+            if (Keyboard::key(Key::KEY_E)) camera.position(PerspectiveCamera::Direction::Down, delta_time);
+
+
+            if (Keyboard::key_down(Key::KEY_C))
+            {
+                capture_mouse = !capture_mouse;
+                SDL_SetWindowRelativeMouseMode(window, capture_mouse);
+            }
+
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
@@ -199,38 +196,35 @@ namespace inx
                 ImGui::ColorEdit3("Clear Colour", (float*)&clear_colour.x);
 
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-                ImGui::Text("Time to render: %.3f", timer);
                 ImGui::End();
             }
 
             render_api::clear_colour(clear_colour);
             render_api::clear();
 
-            auto& shader = manager.get_resource<Shader>("quad");
-            shader.bind();
-            
-            shader.set_mat4("u_vp_matrix", orth_camera.view_projection_matrix());
-            shader.set_mat4("u_model", model);
-            
-            manager.get_resource<Texture>("r2d_white").bind();
-
-            render2d::begin_batch();
-            
-            float a = (float)SDL_GetTicks();
-            glm::vec4 colour = glm::vec4(4.f, 0.f, .6f, 1.f);
-            for (float y = -10.f; y < 10.f; y += .5f)
+            // draw quad test where we draw a bunch of squares
             {
-                for (float x = -10.f; x < 10.f; x += .5f)
-                {
-                    render2d::draw_quad(glm::vec3(x, y, 0.f), glm::vec2(.2f, .2f), colour);
-                }
+                auto& shader = manager.get_resource<Shader>("quad");
+                manager.get_resource<Texture>("r2d_white").bind();
+                shader.bind();
+                
+                auto proj = glm::perspective(glm::radians(camera.fov()), (float)screen_width / (float)screen_height, .1f, 100.f);
+                shader.set_mat4("u_vp_matrix", proj * camera.view_matrix());
+                
+                auto model = glm::mat4(1.f);
+                model = glm::translate(model, glm::vec3(0.f, 0.f, 0.f));
+                shader.set_mat4("u_model", model);
+                
+                render2d::begin_batch();
+
+                glm::vec4 colour = glm::vec4(4.f, 0.f, .6f, 1.f);
+                for (float y = -10.f; y < 10.f; y += .25f)
+                    for (float x = -10.f; x < 10.f; x += .25f)
+                        render2d::draw_quad(glm::vec3(x, y, 0.f), glm::vec2(.2f, .2f), colour);
+
+                render2d::end_batch();
+                render2d::flush();
             }
-            float b = (float)SDL_GetTicks();
-
-            render2d::end_batch();
-            render2d::flush();
-
-            timer = b - a;
             
             // draw_cubes(manager, camera, screen_width, screen_height, rotate_cubes);
             

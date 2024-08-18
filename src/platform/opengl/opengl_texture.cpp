@@ -77,6 +77,7 @@ namespace inx
 
     void OpenGLTexture::data(const void* data, u32 size)
     {
-        glTexSubImage2D(_id, 0, 0, 0, _width, _height, _format, GL_UNSIGNED_BYTE, data);
+        glBindTexture(GL_TEXTURE_2D, _id);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, _format, GL_UNSIGNED_BYTE, data);
     }
 } // namespace inx
